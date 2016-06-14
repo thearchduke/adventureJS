@@ -16,6 +16,13 @@ I think you can probably sell the dimension rift thing. That’s plausible.
 
 Perhaps after he gets sucked through the dimensional rift 
 he comes to naked in a bathroom with a torn rotator cuff(?) and a broken mop. Puzzle time!!
+
+
+TODO:
+Doors
+Visibility
+Inventory
+etc.
 */
 
 
@@ -55,7 +62,7 @@ function Game(name) {
 		s = s.toLowerCase();
 
 		if (s == 'look') {
-			return this.currentRoom.getDescription()
+			return (this.currentRoom.getDescription() + '<br/>exits:<br/>' + this.currentRoom.getExits())
 
 		} else 
 
@@ -67,36 +74,43 @@ function Game(name) {
 			}
 
 			best = this.currentRoom.bestMatch(lookAt)
+			//console.log(best)
 			return best.getDescription()		
 		} else
 
 		if (s.match('open ')) {
 			opening = s.split('open ')[1]
 			best = this.currentRoom.bestMatch(opening)
-			best.open = true
+			if (best.closable) {
+				best.open = true
 
-			if (best == back_door) {
-				kitchen.description = "You are in the kitchen. \
-		There's a fridge and stuff, some cabinets. The back door is open! Rosie ran out to the back yard!"
-				kitchen.addExit(backyard, 'south')
-				return kitchen.getDescription()
-			}
+				if (best == back_door) {
+					kitchen.description = "You are in the kitchen. \
+			There's a fridge and stuff, some cabinets. The back door is open! Rosie ran out to the back yard!"
+					kitchen.addExit(backyard, 'south')
+					backyard.description = "The sunshine hits your face as you step into the back yard. \
+			It's kind of nice, by West Virginia standards. Hey look, it's Rosie!"
+					return renderOutput('look')
+				}
 
 			return best.getDescription()
+			}
 		} else
 
 		if (s.match('close ')) {
 			opening = s.split('close ')[1]
 			best = this.currentRoom.bestMatch(opening)
-			best.open = false
+			if (best.closable) {
+				best.open = false
 
-			if (best == back_door) {
-				kitchen.description = "You are in the kitchen. \
-		There's a fridge and stuff, some cabinets. The back door is closed, but Rosie is still in the yard."
-				kitchen.removeExit(backyard, 'south')
-				return kitchen.getDescription()
-			}
+				if (best == back_door) {
+					kitchen.description = "You are in the kitchen. \
+			There's a fridge and stuff, some cabinets. The back door is closed, but Rosie is still in the yard."
+					kitchen.removeExit(backyard, 'south')
+					return renderOutput('look') //kitchen.getDescription()
+				}
 			return best.getDescription()
+			}
 		} else
 
 		if (s == 'exits') {
@@ -132,6 +146,7 @@ function Room(name="a default room", description="a default description", parent
 	this.description = description;
 	this.holds = [];
 	this.exits = {'east': null, 'west': null, 'south': null, 'north': null}
+	this.doors = []
 
 	function toDir(dir) {
 
@@ -232,6 +247,20 @@ function Room(name="a default room", description="a default description", parent
 	}
 };
 
+function Door(name, description, r1, r2) {
+	this.name = name
+	this.description = description
+	this.r1 = r1
+	this.r2 = r2
+	this.open = false
+	this.closable = true
+
+	this.register = function() {
+		this.r1.doors.push(this)
+		this.r2.doors.push(this)
+	}
+}
+
 function Item(name="some item", description="") {
 	this.name = name
 	this.holder = null
@@ -243,7 +272,7 @@ function Item(name="some item", description="") {
 	this.description = description
 	this.open = true
 	this.closable = false
-	this.closed_description = ''
+	this.closed_description = description
 
 	this.getDescription = function() {
 		var l;
@@ -261,12 +290,11 @@ function Item(name="some item", description="") {
 		};
 
 		if (l) {
-			if (this.open && this.closable) 
-				{return this.description + " It is open." + l}
-		 else {
-		return this.description
+			if (this.open && this.closable) {
+				return this.description + " It is open." + l
 			}
 		}
+		return this.description
 	}
 
 	this.getContents = function(room=this, l=[]) {
@@ -388,6 +416,7 @@ function populateGame() {
 		mottled surface. Slightly dusty. (Just a little.) Some frat kid's handprints are on it."
 	fridge.open = false
 	fridge.closable = true
+	addHolder(fridge, kitchen)
 
 	no_mustard = new Item("No mustard", "A distinct lack of mustard.")
 	addHolder(no_mustard, cabinet)
@@ -427,6 +456,10 @@ function startText(text, time, decoration=null) {
 }
 
 function startGame() {
+	setTimeout(function() {
+		$('#outputBox').append(renderOutput('look'));
+	}, 0);
+	/*
 	startText("An 'adventure' 'game'", 300, 'h1')
 	startText("enjoy?", 4000, 'h4')
 	startText("Once upon a time...", 500, 'h3')
@@ -446,6 +479,7 @@ function startGame() {
 	setTimeout(function() {
 		$('#outputBox').append(renderOutput('look'));
 	}, 1900);
+	*/
 	/*
 	startText("An 'adventure' 'game'", 300, 'h1')
 	startText("enjoy?", 1000, 'h4')

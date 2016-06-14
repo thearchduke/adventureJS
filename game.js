@@ -17,6 +17,57 @@ function Game(name) {
 	this.name = name;
 	this.rooms = [];
 	this.players = [];
+	this.currentRoom = null
+
+	this.getContents = function(room=this, l=[]) {
+		this.holds = this.rooms
+		for (var i in room.holds) {
+			try {
+				l.push(room.holds[i]);
+				getContents(room.holds[i], l);
+			} catch(err) {console.log(err)};
+		};
+		return l;
+	};
+
+	this.moveRoom = function(dir) {
+		if (this.currentRoom.exits[dir]) {
+			this.currentRoom = this.currentRoom.exits[dir]
+			return this.currentRoom.name
+		}
+		else {
+			return "there's no exit in that direction"
+		}
+	}
+
+	this.parseInput = function(s) {
+		s = s.toLowerCase();
+
+		if (s == 'look') {
+			return this.currentRoom.getDescription()
+
+		} else 
+
+		if (s.match('look ')) {
+			if (s.match('look at ')) {
+				lookAt = s.split('look at ')[1]
+			} else {
+				lookAt = s.split('look ')[1]
+			}
+
+			best = this.currentRoom.bestMatch(lookAt)
+			return best.getDescription()		
+		} else
+
+		if (s == 'exits') {
+			return this.currentRoom.getExits()
+		} else
+
+		{
+			return "-";
+		};
+	}
+
 };
 
 function Room(name="a default room", description="a default description", parent=null, rooms=[]) {
@@ -36,6 +87,7 @@ function Room(name="a default room", description="a default description", parent
 	this.name = name;
 	this.description = description;
 	this.holds = [];
+	this.exits = {'east': null, 'west': null, 'south': null, 'north': null}
 
 	function toDir(dir) {
 
@@ -50,7 +102,7 @@ function Room(name="a default room", description="a default description", parent
 
 	this.getDescription = function() {
 		var l;
-		if (this.holds) {
+		if (this.holds.length > 0) {
 			l = '<br/>you see:'
 			for (var i in this.holds) {
 				l += '<br/>--' + this.holds[i].name;
@@ -61,8 +113,53 @@ function Room(name="a default room", description="a default description", parent
 		} else {
 		return this.description
 		};
-	};
+	}
 
+	this.getExits = function() {
+		var l = '';
+		for (var dir in this.exits) {
+			if (this.exits[dir]) {
+				l += dir + ': ' + this.exits[dir].name + '<br/>'
+			}
+		}
+		if (l != '') {
+			return l
+		} else {
+			return 'no exits'
+		}
+	}
+
+	this.addExit = function(room, dir) {
+		this.exits[dir] = room
+		if (dir == 'east') {
+			room.exits['west'] = this
+		}
+		else if (dir == 'west') {
+			room.exits['east'] = this
+		}
+		else if (dir == 'north') {
+			room.exits['south'] = this
+		}
+		else if (dir == 'south') {
+			room.exits['north'] = this
+		}
+	}
+
+	this.removeExit = function(room, dir) {
+		this.exits[dir] = null
+		if (dir == 'east') {
+			room.exits['west'] = null
+		}
+		else if (dir == 'west') {
+			room.exits['east'] = null
+		}
+		else if (dir == 'north') {
+			room.exits['south'] = null
+		}
+		else if (dir == 'south') {
+			room.exits['north'] = null
+		}
+	}
 	this.getContents = function(room=this, l=[]) {
 		for (var i in room.holds) {
 			try {
@@ -184,53 +281,32 @@ function getContents(room, l=[]) {
 };
 
 function moveRoom(oldRoom, newRoom) {
-	currentRoom = newRoom;
+	game.currentRoom = newRoom;
 };
 
 
 // INPUT PARSING
-function parseInput(s) {
-	s = s.toLowerCase();
-
-	if (s == 'look') {
-		return currentRoom.getDescription()
-
-	} else 
-
-	if (s.match('look ')) {
-		if (s.match('look at ')) {
-			lookAt = s.split('look at ')[1]
-		} else {
-			lookAt = s.split('look ')[1]
-		}
-
-		best = currentRoom.bestMatch(lookAt)
-		return best.getDescription()		
-	} else
-
-	{
-		return "-";
-	};
-};
-
 function getOutput(text) {
-	return parseInput(text);
+	return game.parseInput(text);
 };
 
 function renderOutput(text) {
 	var out = $("<div>", {class: "commandResponse"});
 	var firstLine = $("<span>", {class: "commandEcho", text: text});
-	var secondLine = $("<span>", {class: "currentRoom", text: '(you are in ' + currentRoom.name + ')'})
+	if (text.toLowerCase() == 'look') {
+		firstLine.append($("<span>", {class: "currentRoom", text: ' (you are in ' + game.currentRoom.name + ')'}))
+		// add exits
+	}
 	var o = getOutput(text);
-	var thirdLine = $("<span>", {class: "commandResponse", html: o});
-	out.append([firstLine, $("<br>"), secondLine, $("<br>"), thirdLine]);
+	var lastLine = $("<span>", {class: "commandResponse", html: o});
+	out.append([firstLine, $("<br>"), lastLine]);
 	return out;
 };
 
 
 // INITIALIZE
 game = new Game("My Game!");
-currentRoom = null;
+//currentRoom = null;
 
 // POPULATE
 function popLimbo() {
@@ -242,7 +318,7 @@ function popLimbo() {
 	addHolder(shelf, limbo);
 	addHolder(book, shelf);
 	addHolder(page, book);
-	currentRoom = limbo;
+	game.currentRoom = limbo
 	//contents = getContents(limbo)
 	//console.log(getContents(limbo, contents))
 };

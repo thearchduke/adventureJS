@@ -5,6 +5,16 @@
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
 	<script src="game.js"></script>
+
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
 <style>
 	#outputBox {
 		border: 3px solid gray;
@@ -35,20 +45,38 @@
 </head>
 
 <body>
+<div class="container theme-showcase" role="main">
 
+	<div class="jumbotron">
+	    <h1>It's the Balloon-Juice Adventure Game!</h1>
+	    <p>by Major Major Major Major</p>
+	    <p><i>note: safari does not like this. tested on chrome.</i></p>
+	</div>
+      <div class="page-header">
+        <h1>Play in the box below.</h1>
+        <p>Commands:
+	        <ul>
+	        	<li><i>exits</i>: show exits</li>
+	        	<li><i>go north/south/east/west</i>: move</li>
+	        	<li><i>look</i>: room description</li>
+	        	<li><i>look at object</i>: object description</li>
+	        </ul>
+        </p>
+      </div>
 <div id="outputBox">
 </div>
 
 <br />
-enter commands:
+enter command:
 <br />
 
 <form id="inputForm">
-	<input type="text" style="width: 200px;" name="inputBox">&nbsp;&nbsp;<input type="submit" value="submit">
+	<input type="text" style="width: 200px;" name="inputBox">&nbsp;&nbsp;<input id="myButton" type="submit" value="submit!" class="btn btn-sm btn-success">
 </form>
-
-<script type="text/javascript">
-</script>
-
+<br/><br/><br/>&nbsp;
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+</div>
 </body>
 </html>

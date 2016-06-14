@@ -14,9 +14,10 @@ Copyright 2016 J. Tynan Burke
 
 // MODELS
 function Game(name) {
-	this.name = name;
-	this.rooms = [];
-	this.players = [];
+	this.name = name
+	this.rooms = []
+	this.items = []
+	this.players = []
 	this.currentRoom = null
 
 	this.getContents = function(room=this, l=[]) {
@@ -33,7 +34,7 @@ function Game(name) {
 	this.moveRoom = function(dir) {
 		if (this.currentRoom.exits[dir]) {
 			this.currentRoom = this.currentRoom.exits[dir]
-			return this.currentRoom.name
+			return this.currentRoom.getDescription()
 		}
 		else {
 			return "there's no exit in that direction"
@@ -61,6 +62,10 @@ function Game(name) {
 
 		if (s == 'exits') {
 			return this.currentRoom.getExits()
+		} else
+
+		if (s.match('go ')) {
+			return this.moveRoom(s.split('go ')[1])
 		} else
 
 		{
@@ -192,6 +197,7 @@ function Item(name="some item", description="") {
 	this.name = name;
 	this.holder = null;
 	this.holds = [];
+	game.items.push(this)
 	this.container = null;
 	this.player = null;
 	this.quantity = 1;
@@ -306,12 +312,11 @@ function renderOutput(text) {
 
 // INITIALIZE
 game = new Game("My Game!");
-//currentRoom = null;
 
 // POPULATE
-function popLimbo() {
+function populateGame() {
 	limbo = new Room("limbo", "you look around and see the void behind and all around you");
-	limbo2 = new Room();
+	limbo2 = new Room("also limbo", "another description");
 	shelf = new Item("a bookshelf", "a cheap wooden bookshelf");
 	book = new Item("a yellow book", "a book about javascript programming for dummies");
 	page = new Item("a page", "what it sounds like");
@@ -319,17 +324,29 @@ function popLimbo() {
 	addHolder(book, shelf);
 	addHolder(page, book);
 	game.currentRoom = limbo
-	//contents = getContents(limbo)
-	//console.log(getContents(limbo, contents))
+	limbo.addExit(limbo2, 'west')
 };
+
+function startGame() {
+	$('#outputBox')
+}
 
 $(document).ready(function () {
 	// DOM logic
-	popLimbo();
+	populateGame();
+	startGame();
+	/*
+	$('#myButton').on('click', function() {
+		command = $('#inputBox').val();//$('#inputForm').children().eq(0).val();
+		$('#outputBox').prepend(renderOutput(command));
+		$('#inputForm').children().eq(0).val('')
+	});
+	*/
 	$('#inputForm').on('submit', function(e) {
 		e.preventDefault();
 		command = $(this).children().eq(0).val();
 		$('#outputBox').prepend(renderOutput(command));
+		$(this).children().eq(0).val('')
 		return false;
 	});
 });

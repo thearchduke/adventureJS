@@ -44,9 +44,51 @@ function Room(name="a default room", description="a default description", parent
 	// functions
 	this.contains = function()
 	{
-		console.log(this.rooms);
+		console.log(this.rooms)
 		console.log(this.holds)
 	};
+
+	this.getDescription = function() {
+		var l;
+		if (this.holds) {
+			l = '<br/>you see:'
+			for (var i in this.holds) {
+				l += '<br/>--' + this.holds[i].name;
+			};
+		};
+		if (l) {
+			return this.description + l;
+		} else {
+		return this.description
+		};
+	};
+
+	this.getContents = function(room=this, l=[]) {
+		for (var i in room.holds) {
+			try {
+				l.push(room.holds[i]);
+				getContents(room.holds[i], l);
+			} catch(err) {console.log(err)};
+		};
+		return l;
+	};
+
+	this.bestMatch = function(test) {
+		bestDist = 100
+		bestMatch = null
+		contents = this.getContents()
+		testItem = {name: test}
+		for (var i in contents) {
+			item = contents[i]
+			diff = item.getDiff(testItem)
+			//console.log(item, diff, testItem)
+			if (diff < bestDist) {
+				bestDist = diff
+				bestMatch = item
+			}
+		}		
+	return bestMatch
+	}
 };
 
 function Item(name="some item", description="") {
@@ -58,6 +100,70 @@ function Item(name="some item", description="") {
 	this.quantity = 1;
 	this.description = description;
 
+	this.getDescription = function() {
+		var l;
+		console.log(this.holds)
+		if (this.holds.length > 0) {
+			l = '<br/>you see:'
+			for (var i in this.holds) {
+				l += '<br/>--' + this.holds[i].name;
+			};
+		};
+		if (l) {
+			return this.description + l;
+		} else {
+		return this.description
+		};
+	};
+
+	this.getContents = function(room=this, l=[]) {
+		for (var i in room.holds) {
+			try {
+				l.push(room.holds[i]);
+				getContents(room.holds[i], l);
+			} catch(err) {console.log(err)};
+		};
+		return l;
+	};
+
+	this.histogram = function(item=this) {
+		out = {}
+		s = item.name
+		for (var i in s) {
+			ltr = s[i]
+			if (ltr in out) {
+				out[ltr]++;
+			} else {
+				out[ltr] = 1;
+			}
+		}
+		return out
+	}
+
+	this.getDiff = function(item) {
+		h1 = this.histogram(this)
+		h2 = this.histogram(item)
+		diff = 0
+		for (var i in h1) {
+			if (i in h2) {
+				diff -= 1
+				diff += Math.abs(h1[i] - h2[i])
+			}
+			else {
+				diff += 1
+			}
+		}
+		for (var i in h2) {
+			if (i in h1) {
+				diff -= 1
+				diff += Math.abs(h1[i] - h2[i])
+			}
+			else {
+				diff += 1
+			}
+		}
+		return diff		
+	}
 };
 
 function addHolder(item, holder) {
@@ -71,25 +177,10 @@ function getContents(room, l=[]) {
 	for (var i in room.holds) {
 		try {
 			l.push(room.holds[i]);
-			//console.log(l);
 			getContents(room.holds[i], l);
 		} catch(err) {console.log(err)};
 	};
 	return l;
-};
-
-function getDescription(room) {
-	if (room.holds) {
-		l = '<br/>you see:'
-		for (var i in room.holds) {
-			l += '<br/>--' + room.holds[i].name;
-		};
-	};
-	if (l) {
-		return room.description + l;
-	} else {
-	return room.description
-	};
 };
 
 function moveRoom(oldRoom, newRoom) {
@@ -98,45 +189,26 @@ function moveRoom(oldRoom, newRoom) {
 
 
 // INPUT PARSING
-function lDistance (s, t) {
-    if (!s.length) return t.length;
-    if (!t.length) return s.length;
-
-    return Math.min(
-        lDistance(s.substr(1), t) + 1,
-        lDistance(t.substr(1), s) + 1,
-        lDistance(s.substr(1), t.substr(1)) + (s[0] !== t[0] ? 1 : 0)
-    ) + 1;
-}
-
 function parseInput(s) {
 	s = s.toLowerCase();
 
 	if (s == 'look') {
-		return getDescription(currentRoom);
+		return currentRoom.getDescription()
 
-	} else if (s.match('look ')) {
+	} else 
+
+	if (s.match('look ')) {
 		if (s.match('look at ')) {
 			lookAt = s.split('look at ')[1]
 		} else {
 			lookAt = s.split('look ')[1]
 		}
 
-	l = getContents(currentRoom)// currentRoom.holds
-	best = null
-	best_d = 100
-	for (var i in l) {
-		test = lDistance(l[i].name, lookAt)
-		if (test < best_d) {
-			best = l[i]
-			best_d = test
-			console.log(l[i].name, best.name, best_d)
-		}
-	}
-	return getDescription(best)
+		best = currentRoom.bestMatch(lookAt)
+		return best.getDescription()		
+	} else
 
-		
-	} else {
+	{
 		return "-";
 	};
 };

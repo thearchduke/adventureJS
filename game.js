@@ -2,10 +2,20 @@
 A GAME THAT I'M USING TO TEACH MYSELF SOME MORE JAVASCRIPT
 it's a text adventure
 
-J. Tynan Burke
+A certain accident prone, curmudgeonly, but really big hearted blogger/blog owner 
+gets sucked through a dimensional rift while trying to rescue a wayward dog. 
+Once on the other side he, and his now faithful canine companion, 
+have to rescue a kingdom by freeing the secret for making mustard from an evil tyrant.
 
-This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License. 
-Copyright 2016 J. Tynan Burke
+On second thought no one would buy an accident prone, 
+curmudgeonly, 
+but really big hearted blogger/blog owner 
+who has a penchant for rescuing wayward dogs and likes mustard. 
+
+I think you can probably sell the dimension rift thing. That’s plausible.
+
+Perhaps after he gets sucked through the dimensional rift 
+he comes to naked in a bathroom with a torn rotator cuff(?) and a broken mop. Puzzle time!!
 */
 
 
@@ -58,6 +68,35 @@ function Game(name) {
 
 			best = this.currentRoom.bestMatch(lookAt)
 			return best.getDescription()		
+		} else
+
+		if (s.match('open ')) {
+			opening = s.split('open ')[1]
+			best = this.currentRoom.bestMatch(opening)
+			best.open = true
+
+			if (best == back_door) {
+				kitchen.description = "You are in the kitchen. \
+		There's a fridge and stuff, some cabinets. The back door is open! Rosie ran out to the back yard!"
+				kitchen.addExit(backyard, 'south')
+				return kitchen.getDescription()
+			}
+
+			return best.getDescription()
+		} else
+
+		if (s.match('close ')) {
+			opening = s.split('close ')[1]
+			best = this.currentRoom.bestMatch(opening)
+			best.open = false
+
+			if (best == back_door) {
+				kitchen.description = "You are in the kitchen. \
+		There's a fridge and stuff, some cabinets. The back door is closed, but Rosie is still in the yard."
+				kitchen.removeExit(backyard, 'south')
+				return kitchen.getDescription()
+			}
+			return best.getDescription()
 		} else
 
 		if (s == 'exits') {
@@ -194,30 +233,41 @@ function Room(name="a default room", description="a default description", parent
 };
 
 function Item(name="some item", description="") {
-	this.name = name;
-	this.holder = null;
-	this.holds = [];
+	this.name = name
+	this.holder = null
+	this.holds = []
 	game.items.push(this)
-	this.container = null;
-	this.player = null;
-	this.quantity = 1;
-	this.description = description;
+	this.container = null
+	this.player = null
+	this.quantity = 1
+	this.description = description
+	this.open = true
+	this.closable = false
+	this.closed_description = ''
 
 	this.getDescription = function() {
 		var l;
-		console.log(this.holds)
+		//console.log(this.holds)
+
+		if (this.open == false) {
+			return this.closed_description + " It is closed."
+		}
+
 		if (this.holds.length > 0) {
-			l = '<br/>you see:'
+			l = '<br/>it holds:'
 			for (var i in this.holds) {
 				l += '<br/>--' + this.holds[i].name;
 			};
 		};
+
 		if (l) {
-			return this.description + l;
-		} else {
+			if (this.open && this.closable) 
+				{return this.description + " It is open." + l}
+		 else {
 		return this.description
-		};
-	};
+			}
+		}
+	}
 
 	this.getContents = function(room=this, l=[]) {
 		for (var i in room.holds) {
@@ -315,20 +365,106 @@ game = new Game("My Game!");
 
 // POPULATE
 function populateGame() {
-	limbo = new Room("limbo", "you look around and see the void behind and all around you");
+	rosie_in_kitchen = true
+	kitchen = new Room("The kitchen", "You are in the kitchen. \
+		There's a fridge and stuff, some cabinets. You can see Rosie. The back door is closed.")
+	backyard = new Room("The back yard", "The sunshine hits your face as you step into the back yard. \
+		It's kind of nice, by West Virginia standards.")
+	bathroom = new Room("The bathroom", "You're in the bathroom. It's alright I guess. The floor really needs new tiles though.")
+
+	kitchen.addExit(bathroom, 'east')
+
+	mop = new Item("A mop", "It's a mop. Moppity mop mop.")
+	addHolder(mop, bathroom)
+
+	cabinet = new Item("The kitchen cabinet", "It's vintage. (It's old.)")
+	cabinet.open = false
+	cabinet.closable = true
+	addHolder(cabinet, kitchen)
+
+	fridge = new Item("The refrigerator", "Inside of the refrigerator is a feast fit for a king! And two dogs, and a cat. \
+		The feast is suitable for two dogs and a cat, that is. They're not inside the fridge.")
+	fridge.closed_description = "A slightly-used Kenmore. One of the white ones, with the weird \
+		mottled surface. Slightly dusty. (Just a little.) Some frat kid's handprints are on it."
+	fridge.open = false
+	fridge.closable = true
+
+	no_mustard = new Item("No mustard", "A distinct lack of mustard.")
+	addHolder(no_mustard, cabinet)
+
+	back_door = new Item("The back door", "The door to the backyard.")
+	back_door.open = false
+	back_door.closable = true
+	addHolder(back_door, kitchen)
+
+	game.currentRoom = kitchen
+};
+
+/*
+function populateGame() {
+	limbo = new Room("limbo", "you look around and see the void behind and all around you.");
 	limbo2 = new Room("also limbo", "another description");
-	shelf = new Item("a bookshelf", "a cheap wooden bookshelf");
+	shelf = new Item("a bookshelf", "a cheap wooden bookshelf.");
 	book = new Item("a yellow book", "a book about javascript programming for dummies");
 	page = new Item("a page", "what it sounds like");
 	addHolder(shelf, limbo);
 	addHolder(book, shelf);
 	addHolder(page, book);
+	shelf.open = false
+	shelf.closable = true
 	game.currentRoom = limbo
 	limbo.addExit(limbo2, 'west')
 };
+*/
+
+function startText(text, time, decoration=null) {
+	if (decoration) {
+		text = '<' + decoration + '>' + text + '</' + decoration + '>'
+	}
+	setTimeout(function() {
+		$('#prologueBox').append(text);
+		}, time);
+}
 
 function startGame() {
-	$('#outputBox')
+	startText("An 'adventure' 'game'", 300, 'h1')
+	startText("enjoy?", 4000, 'h4')
+	startText("Once upon a time...", 500, 'h3')
+	startText("A certain accident prone,", 600, 'p')
+	startText("curmudgeonly,", 700, 'p')
+	startText("but really big hearted", 800, 'p')
+	startText("Blogger/Blog Owner", 900, 'h3')
+	startText("gets sucked through a dimensional rift while trying to rescue a wayward dog. Once on the other side he, and his now faithful canine companion, have to rescue a kingdom by freeing the secret for making mustard from an evil tyrant.", 1000, 'p')
+	startText("On second thought,", 1100, 'h3')
+	startText("no one would buy", 1200, 'h4')
+	startText("An accident prone,", 1300, 'p')
+	startText("curmudgeonly,", 1400, 'p')
+	startText("but really big hearted Blogger/Blog Owner", 1500, 'h4')
+	startText("who has a penchant for rescuing wayward dogs and likes mustard.", 1600, 'p')
+	startText("<br/><br/>I think you can probably sell the dimension rift thing. That's plausible.", 1700, 'h3')
+	startText("--Adam L. Silverman", 1800, 'h4')
+	setTimeout(function() {
+		$('#outputBox').append(renderOutput('look'));
+	}, 1900);
+	/*
+	startText("An 'adventure' 'game'", 300, 'h1')
+	startText("enjoy?", 1000, 'h4')
+	startText("Once upon a time...", 2000, 'h3')
+	startText("A certain accident prone,", 2600, 'p')
+	startText("curmudgeonly,", 3200, 'p')
+	startText("but really big hearted", 3800, 'p')
+	startText("Blogger/Blog Owner", 4400, 'h3')
+	startText("gets sucked through a dimensional rift while trying to rescue a wayward dog. Once on the other side he, and his now faithful canine companion, have to rescue a kingdom by freeing the secret for making mustard from an evil tyrant.", 5000, 'p')
+	startText("On second thought,", 10000, 'h3')
+	startText("no one would buy", 10600, 'h4')
+	startText("An accident prone,", 11200, 'p')
+	startText("curmudgeonly,", 11800, 'p')
+	startText("but really big hearted Blogger/Blog Owner", 12400, 'h4')
+	startText("who has a penchant for rescuing wayward dogs and likes mustard.", 13000, 'p')
+	startText("<br/><br/>I think you can probably sell the dimension rift thing. That's plausible.", 15000, 'h3')
+	startText("--Adam L. Silverman", 17000, 'h4')
+
+	*/
 }
 
 $(document).ready(function () {
@@ -344,8 +480,9 @@ $(document).ready(function () {
 	*/
 	$('#inputForm').on('submit', function(e) {
 		e.preventDefault();
-		command = $(this).children().eq(0).val();
-		$('#outputBox').prepend(renderOutput(command));
+		command = $(this).children().eq(0).val()
+		$('#outputBox').append(renderOutput(command))
+		$("#outputBox").scrollTop($("#outputBox")[0].scrollHeight);
 		$(this).children().eq(0).val('')
 		return false;
 	});
